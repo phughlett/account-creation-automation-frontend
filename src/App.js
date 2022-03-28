@@ -4,7 +4,8 @@ import { Routes, Route, useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from 'react';
 import AppContext from './context/AppContext';
 import { PDFDocument } from 'pdf-lib'
-
+import Frontpage from './views/frontpage/Frontpage'
+import UploadPage from './views/uploadpage/UploadPage'
 
 function App() {
 
@@ -14,6 +15,7 @@ function App() {
 
   const [pdfFileBuffer, setPdfFileBuffer] = useState();
   const [file, setFile] = useState();
+  const [userTickets, setUserTickets] = useState([]);
 
   //download.js v3.0, by dandavis; 2008-2014. [CCBY2] see http://danml.com/download.html for tests/usage
   // v1 landed a FF+Chrome compat way of downloading strings to local un-named files, upgraded to use a hidden frame and optional mime
@@ -149,8 +151,10 @@ function App() {
 
 
 
-  async function fillForm(systemName) {
-    systemName = 'NIPR'
+  async function fillForm(systemName, userInfo) {
+
+    console.log('Systemname: ', systemName)
+    console.log('userInfo', userInfo)
     let fileBytes;
 
     // https://www.esd.whs.mil/Portals/54/Documents/DD/forms/dd/dd2875.pdf
@@ -170,6 +174,17 @@ function App() {
     //   console.log('field name', name)
     //   console.log('field', field)
     // })
+
+
+    let date = new Date()
+let day = date.getDate();
+let month = date.getMonth()+1;
+let year = date.getFullYear();
+
+let fullDate = `${year}${month}${day}`;
+
+
+
 
     let checkInitial = form.getCheckBox('INITIAL')
     let checkModification = form.getCheckBox('MODIFICATION')
@@ -228,41 +243,44 @@ function App() {
 
 
     checkInitial.check()
-    textDate.setText('20220325')
+    textDate.setText(fullDate)
     textSystemName.setText(systemName)
     textSystemName.enableReadOnly();
-    textLocation.setText('My Basement')
-    textName.setText('Mario A Plumber')
+    textLocation.setText('The Pentagon, Washington, DC')
+    textName.setText(userInfo.userName)
     textOrganization.setText('SUPRA CODERS')
-    textOfficeSymbol.setText('SC')
-    textPhone.setText('867-5309')
-    textAddress.setText(' 2700 Dollywood Parks Blvd, Pigeon Forge, TN 37863')
-    textTitleGrade.setText('GEN/O11')
-    textMailAddress.setText('Marioap@spaceforce.mil')
+    textOfficeSymbol.setText(userInfo.officeSymbol)
+    textPhone.setText(userInfo.phoneNumber)
+    textAddress.setText(userInfo.userEmail)
+    textTitleGrade.setText(`${userInfo.dutyTitle}  ${userInfo.grade}`)
+    textMailAddress.setText('The Pentagon, Washington, DC')
     checkUsCitizen.check()
-    checkMilitary.check()
+
+    if (userInfo.statusMil === 'true') checkMilitary.check();
+    if (userInfo.statusCiv === 'true') checkCivilian.check();
+    if (userInfo.statusKtr === 'true') checkContractor.check()
+
     checkCyberAwareness.check()
-    textTrainingDate.setText('20220320')
-    textSignDate.setText('20220325')
-    textJustification.setText('Needed for duties')
-    checkPrivilegeRole.check()
+    textTrainingDate.setText(userInfo.trainingDate)
+    textSignDate.setText(fullDate)
+    textJustification.setText('Needed for offical duties')
+    checkAuthorizedRole.check()
     checkClassified.check()
-    textClassified.setText('The Classification is Classified')
+    textClassified.setText('Classified')
     checkNeedtoKnow.check()
-    textSupervisorName.setText('Bowser Turtle ')
-    textExpirationDate.setText('20220325')
-    textSupervisorOrganization.setText('EK')
-    textSupervisorEmail.setText('BowserT@spaceforce.mil')
-    textSupervisorPhoneNumber.setText('365-5996')
+    textSupervisorName.setText(userInfo.supervisor)
+     textSupervisorOrganization.setText(userInfo.supervisorOrg)
+    textSupervisorEmail.setText(userInfo.supervisorEmail)
+    textSupervisorPhoneNumber.setText(userInfo.supervisorPhone)
     textIaoDepartment.setText('WK')
     textIaoPhoneNumber.setText('785-1249')
     // textUserName.setText('Mario A Plumber')
-    textInvestigationType.setText('The Best Kind')
-    textInvestigationDate.setText('20200325')
-    textClearanceLevel.setText('The Classification is Classified')
-    textSecurityManagerName.setText('Peach P')
+    textInvestigationType.setText('Single Scope')
+
+    textClearanceLevel.setText('Classified')
+    textSecurityManagerName.setText('Leeroy Jenkins')
     textSecurityManagerPhoneNum.setText('894-8419')
-    textSecurityManagerSignDate.setText('20220325')
+
 
 
     // fields.forEach(field => {
@@ -271,8 +289,10 @@ function App() {
 
     console.log(pdfDoc)
 
+    let fileName = `${userInfo.userName}-${systemName}-${fullDate}-2875.pdf`
+
     const pdfBytes = await pdfDoc.save()
-    download(pdfBytes, `test.pdf`, "application/pdf");
+    download(pdfBytes, fileName, "application/pdf");
   }
 
 
@@ -283,7 +303,10 @@ function App() {
 
     let body = new FormData();
 
-    body.append('file', file[0])
+    for(let i=0;i < file.length; ++i){
+      body.append('file', file[i])
+
+    }
 
     console.log(body)
 
@@ -315,9 +338,11 @@ function App() {
           >
             Learn React
           </a>
+          <button onClick={e=> getUserTickets('google@aol.com')}>Get User Tickets</button>
+          <button onClick={e => downloadUserTickets()}>Download UserTickets</button>
           <button onClick={e => fillForm()}>Fill Form</button>
           <form>
-            <input type="file" name="file" onChange={e => setFile(e.target.files)} />
+            <input type="file" name="file" multiple onChange={e => setFile(e.target.files)} />
             <input type="submit" onClick={e => sendFile(e)} value="Upload" />
           </form>
         </header>
@@ -325,12 +350,46 @@ function App() {
     );
   }
 
-  let contextObj = {
+  function getUserTickets(email){
+    // e.preventDefault()
+    let emailURI  = encodeURIComponent(email)
+
+    fetch(`${API_BASE_URL}/users/tickets/${emailURI}`)
+    .then(response => response.json())
+    .then(data => setUserTickets(data))
+    .catch(err => console.err(err))
 
 
 
   }
 
+  async function downloadUserTickets(){
+
+    for(let i = 0; i < userTickets.length; ++i){
+
+      let fileName = userTickets[i].form_filepath;
+      let currTicket = userTickets[i]
+
+
+      let formpdfbytes = await fetch(`http://localhost:8080/tickets/${userTickets[i].id}`).then(res => res.arrayBuffer())
+
+      let pdfDoc = await PDFDocument.load(formpdfbytes)
+      const pdfBytes = await pdfDoc.save()
+
+      download(pdfBytes, `${currTicket.lastname}-${currTicket.firstname} 2875.pdf`, "application/pdf")
+
+
+    }
+  }
+
+  let contextObj = {
+
+    fillForm,
+    sendFile,
+    getUserTickets,
+    downloadUserTickets
+
+  }
 
 
 
@@ -344,8 +403,8 @@ function App() {
     <AppContext.Provider value={contextObj}>
       <Routes>
         <Route path='/' element={<PlaceHolderPage />} />
-        {/* <Route path='/login' element={<Login />} /> */}
-        {/* <Route path={routeURL} element={<UserHomePage />} /> */}
+        <Route path='/frontpage' element={<Frontpage />} />
+        <Route path='/upload' element={<UploadPage />} />
       </Routes>
     </AppContext.Provider>
 
