@@ -283,16 +283,18 @@ function App() {
 
     let body = new FormData();
 
-    body.append('file', file)
+    body.append('file', file[0])
 
     console.log(body)
 
-    // fetch(`${API_BASE_URL}/`, {
-    //   method: 'POST',
-    //   body
-    // })
-    // .then(data => console.log(data))
-    // .catch(err => console.log('err: ', err))
+
+
+    fetch(`${API_BASE_URL}/test`, {
+      method: 'POST',
+      body
+    })
+    .then(data => console.log(data))
+    .catch(err => console.log('err: ', err))
   }
 
 
@@ -315,8 +317,8 @@ function App() {
           </a>
           <button onClick={e => fillForm()}>Fill Form</button>
           <form>
-            <input type="file" name="file" onChange={e => setFile(e.target.value)} />
-            <input type="submit" onClick={e => fillForm()} value="Upload" />
+            <input type="file" name="file" onChange={e => setFile(e.target.files)} />
+            <input type="submit" onClick={e => sendFile(e)} value="Upload" />
           </form>
         </header>
       </div>
