@@ -1,5 +1,5 @@
 import AppContext from '../../context/AppContext';
-import { useEffect, useState, useContext } from 'react';
+import { useState, useContext } from 'react';
 import './Frontpage.css';
 import {  useNavigate } from "react-router-dom";
 //Split the name up intolast first middle int
@@ -9,13 +9,14 @@ export default function Frontpage() {
   let navigate = useNavigate();
 
   const [systemsNeeded, setSystemsNeeded] = useState([])
-  const [userName, setUserName] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [middleInitial, setMiddleInitial] = useState('')
+  const [lastName, setLastName] = useState('')
   const [officeSymbol, setOfficeSymbol] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
   const [userEmail, setUserEmail] = useState('')
   const [dutyTitle, setDutyTitle] = useState('')
   const [grade, setGrade] = useState('')
-  const [userStatus, setUserStatus] = useState('')
   const [statusMil, setStatusMIl] = useState('')
   const [statusCiv, setStatusCiv] = useState('')
   const [statusKrt, setStatusKtr] = useState('')
@@ -31,7 +32,7 @@ export default function Frontpage() {
 
 
 
-  let formObject = { userName, officeSymbol, phoneNumber, dutyTitle, grade, userEmail, userStatus, statusMil, statusCiv, statusKrt, trainingDate, supervisor, supervisorOrg, supervisorEmail, supervisorPhone };
+  let formObject = { firstName, middleInitial, lastName, officeSymbol, phoneNumber, dutyTitle, grade, userEmail, statusMil, statusCiv, statusKrt, trainingDate, supervisor, supervisorOrg, supervisorEmail, supervisorPhone };
 
 
 
@@ -42,10 +43,6 @@ export default function Frontpage() {
       fillForm(systemsNeeded[i], formObject)
     }
     navigate('/upload')
-
-
-
-
   }
 
 
@@ -71,7 +68,7 @@ export default function Frontpage() {
     <div className='FrontPage'>
 
       <p>Systems Needed</p>
-      <div className="Systems">
+      <div className="Role">
         <label>| System 1</label>
         <input value='System 1' type='checkbox' onChange={e => changeSystem(e)}></input>
         <label>| System 2</label>
@@ -82,7 +79,7 @@ export default function Frontpage() {
         <input value='System 4' type='checkbox' onChange={e => changeSystem(e)}></input>
         <label>| System 5</label>
         <input value='System 5' type='checkbox' onChange={e => changeSystem(e)}></input>
-        <label>|</label>
+<label>|</label>
       </div>
       <br />
 
@@ -92,7 +89,7 @@ export default function Frontpage() {
 
         <div id='UserInfo'>
           <label for='Military'> Designation of Person: </label>
-          <input type="radio" name="status" value="true" id='military' required onChange={e => setStatusMIl(e.target.value)} />
+          <input type="radio" name="status" value="true" id='military' checked required onChange={e => setStatusMIl(e.target.value)} />
           <label for='Military'> Military </label>
           <input type="radio" name="status" value="true" id='civilian' required onChange={e => setStatusCiv(e.target.value)} />
           <label for='Civilian'> Civilian </label>
@@ -103,17 +100,22 @@ export default function Frontpage() {
 
 
         <div id='UserInfo'>
-          <label for="name"> Name </label>
-          <input type="text"  placeholder="Last, First, Middle Initial" required onChange={e => setUserName(e.target.value)} />
+          <label for="name"> First Name </label>
+          <input type="text"   required onChange={e => setFirstName(e.target.value)} />
+
+          <label for="name"> Middle Initial </label>
+          <input type="text"   required onChange={e => setMiddleInitial(e.target.value)} />
+
+          <label for="name"> Last Name </label>
+          <input type="text"   required onChange={e => setLastName(e.target.value)} />
 
           <label for="name"> Office Symbol </label>
           <input type="text" required  onChange={e => setOfficeSymbol(e.target.value)} />
 
-
           <label for="name"> Phone Number </label>
           <input type="text" required  onChange={e => setPhoneNumber(e.target.value)} />
 
-          <label for="name"> Offical Email </label>
+          <label for="name"> Offical Email  </label>
           <input type="text" required  onChange={e => setUserEmail(e.target.value)} />
 
           <label for="name"> Job Title </label>

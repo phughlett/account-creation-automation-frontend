@@ -10,10 +10,13 @@
 }
 
 #UserInfo{
-  padding: .5em;
   display: flex;
+  flex-wrap: wrap;
+  padding: .5em;
   align-items:baseline;
   text-align: left;
+
+
 
 }
 
@@ -24,7 +27,7 @@
 
 
 .button {
-  background-color: #486b99; /* Green */
+  background-color: #486b99;
   border: none;
   color: white;
   padding: 15px 32px;

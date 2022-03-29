@@ -1,20 +1,15 @@
-
-.UploadPage{
+.Homepage{
   background-color: #282c34;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   font-size: calc(4px + 2vmin);
   color: white;
-}
-.Role{
-  
+
 }
 
-
-.button {
+.homepage-button{
   background-color: #486b99;
   border: none;
   color: white;
@@ -22,16 +17,8 @@
   text-align: center;
   text-decoration: none;
   display: inline-block;
-  font-size: 16px;
-}
-
-
-.MuiDropzoneArea-root{
-  background-color: #dce5e9;
-  color:white;
-  height: 22em;
-}
-
-.MuiDropzoneArea-textContainer{
-  color:black;
+  font-size: calc(10px + 2vmin);
+  height: 8em;
+  width: 10em;
+  margin:5em
 }

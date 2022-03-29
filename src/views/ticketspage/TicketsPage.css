@@ -1,0 +1,21 @@
+.Tickets{
+    background-color: #282c34;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: calc(4px + 2vmin);
+    color: white;
+
+  }
+
+  .tickets-button {
+    background-color: #486b99;
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 12px;
+  }

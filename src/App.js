@@ -4,8 +4,10 @@ import { Routes, Route, useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from 'react';
 import AppContext from './context/AppContext';
 import { PDFDocument } from 'pdf-lib'
+import Homepage from './views/homepage/Homepage'
 import Frontpage from './views/frontpage/Frontpage'
 import UploadPage from './views/uploadpage/UploadPage'
+import TicketsPage from './views/ticketspage/TicketsPage'
 
 function App() {
 
@@ -157,9 +159,10 @@ function App() {
     console.log('userInfo', userInfo)
     let fileBytes;
 
-    // https://www.esd.whs.mil/Portals/54/Documents/DD/forms/dd/dd2875.pdf
+
 
     let formpdfbytes = await fetch('http://localhost:8080/').then(res => res.arrayBuffer())
+
 
     let pdfDoc = await PDFDocument.load(formpdfbytes)
 
@@ -177,11 +180,11 @@ function App() {
 
 
     let date = new Date()
-let day = date.getDate();
-let month = date.getMonth()+1;
-let year = date.getFullYear();
+    let day = date.getDate();
+    let month = date.getMonth() + 1;
+    let year = date.getFullYear();
 
-let fullDate = `${year}${month}${day}`;
+    let fullDate = `${year}${month}${day}`;
 
 
 
@@ -247,7 +250,7 @@ let fullDate = `${year}${month}${day}`;
     textSystemName.setText(systemName)
     textSystemName.enableReadOnly();
     textLocation.setText('The Pentagon, Washington, DC')
-    textName.setText(userInfo.userName)
+    textName.setText(`${userInfo.lastName}, ${userInfo.firstName}, ${userInfo.middleInitial}`)
     textOrganization.setText('SUPRA CODERS')
     textOfficeSymbol.setText(userInfo.officeSymbol)
     textPhone.setText(userInfo.phoneNumber)
@@ -269,17 +272,23 @@ let fullDate = `${year}${month}${day}`;
     textClassified.setText('Classified')
     checkNeedtoKnow.check()
     textSupervisorName.setText(userInfo.supervisor)
-     textSupervisorOrganization.setText(userInfo.supervisorOrg)
+    textSupervisorOrganization.setText(userInfo.supervisorOrg)
     textSupervisorEmail.setText(userInfo.supervisorEmail)
     textSupervisorPhoneNumber.setText(userInfo.supervisorPhone)
     textIaoDepartment.setText('WK')
     textIaoPhoneNumber.setText('785-1249')
     // textUserName.setText('Mario A Plumber')
     textInvestigationType.setText('Single Scope')
-
     textClearanceLevel.setText('Classified')
     textSecurityManagerName.setText('Leeroy Jenkins')
     textSecurityManagerPhoneNum.setText('894-8419')
+
+
+    pdfDoc.setTitle(`${userInfo.firstName}`)
+    pdfDoc.setAuthor(`${userInfo.lastName}`)
+    pdfDoc.setSubject(`${userInfo.userEmail}`)
+    pdfDoc.setCreator(systemName)
+
 
 
 
@@ -289,35 +298,145 @@ let fullDate = `${year}${month}${day}`;
 
     console.log(pdfDoc)
 
-    let fileName = `${userInfo.userName}-${systemName}-${fullDate}-2875.pdf`
+    let fileName = `${userInfo.lastName}, ${userInfo.firstName}-${systemName}-${fullDate}-2875.pdf`
 
     const pdfBytes = await pdfDoc.save()
     download(pdfBytes, fileName, "application/pdf");
   }
 
 
+  async function createTicket(file) {
+
+    const reader = new FileReader()
+
+    reader.onabort = () => console.log('file reading was aborted')
+    reader.onerror = () => console.log('file reading has failed')
+    reader.onload = () => {
+
+      // Do whatever you want with the file contents
+      let result = reader.result
+      console.log('result', result)
+
+      PDFDocument.load(result).then((pdfDoc) => {
+
+        let form = pdfDoc.getForm();//might need to use this to see if what is signed to update the tracker
+
+        console.log(form)
+
+        // let fields = form.getFields()
+        // fields.forEach(field => {
+        //   let name = field.getName();
+        //   console.log('field name', name)
+        //   console.log('field', field)
+        // })
 
 
-  function sendFile(e) {
-    e.preventDefault();
+        let supervisorSignature = form.getField('Signature1')
+        let userSignature = form.getField('Signature2')
+        let infoOwnerSignature = form.getField('Signature3')
+        let iaoSignature = form.getField('Signature4')
+        let secManagerSignature = form.getField('Signature5')
 
-    let body = new FormData();
+        // console.log()
 
-    for(let i=0;i < file.length; ++i){
-      body.append('file', file[i])
+        console.log('supervisor: ',supervisorSignature)
+        console.log('user: ',userSignature)
+        console.log('info owner: ',infoOwnerSignature)
+        console.log('iao: ',iaoSignature)
+        console.log('secman: ',secManagerSignature)
+
+
+
+
+        let system = pdfDoc.getCreator()
+        let systemNum = system.at(system.length - 1)
+        let intNum = parseInt(systemNum)
+
+
+        let firstname = pdfDoc.getTitle()
+        let lastname = pdfDoc.getAuthor()
+        let email = pdfDoc.getSubject()
+        let systemid = intNum
+        let formname = file.name
+
+        let body = new FormData();
+
+        body.append(`file`, file)
+        body.append('firstname', firstname)
+        body.append('lastname', lastname)
+        body.append('email', email)
+        body.append('systemid', systemid)
+        body.append('formname', formname)
+
+
+        fetch(`${API_BASE_URL}/tickets/create`, {
+          method: 'POST',
+          body
+        })
+          .then(data => console.log(data))
+          .catch(err => console.log('err: ', err))
+
+
+      })
 
     }
 
-    console.log(body)
+    reader.readAsArrayBuffer(file)
+
+  }
+
+  async function updateTicket(file, roleSigned) {
+
+    console.log(roleSigned)
+
+    const reader = new FileReader()
+
+    reader.onabort = () => console.log('file reading was aborted')
+    reader.onerror = () => console.log('file reading has failed')
+    reader.onload = () => {
+
+      // Do whatever you want with the file contents
+      let result = reader.result
+      PDFDocument.load(result).then((pdfDoc) => {
+
+        let system = pdfDoc.getCreator()
+        let systemNum = system.at(system.length - 1)
+        let intNum = parseInt(systemNum)
 
 
+        let firstname = pdfDoc.getTitle()
+        let lastname = pdfDoc.getAuthor()
+        let email = pdfDoc.getSubject()
+        let systemid = intNum
+        let formname = file.name
 
-    fetch(`${API_BASE_URL}/test`, {
-      method: 'POST',
-      body
-    })
-    .then(data => console.log(data))
-    .catch(err => console.log('err: ', err))
+        let body = new FormData();
+
+        body.append(`file`, file)
+        body.append('firstname', firstname)
+        body.append('lastname', lastname)
+        body.append('email', email)
+        body.append('systemid', systemid)
+        body.append('formname', formname)
+        body.append('supervisor', roleSigned.includes('Supervisor'))
+        body.append('iao', roleSigned.includes('IAO'))
+        body.append('sec_man', roleSigned.includes('Security Manager'))
+        body.append('sys_admin', roleSigned.includes('System Admin'))
+
+        fetch(`${API_BASE_URL}/tickets/update`, {
+          method: 'PATCH',
+          body
+        })
+          .then(data => console.log(data))
+          .catch(err => console.log('err: ', err))
+
+
+      })
+
+    }
+
+    reader.readAsArrayBuffer(file)
+
   }
 
 
@@ -338,46 +457,42 @@ let fullDate = `${year}${month}${day}`;
           >
             Learn React
           </a>
-          <button onClick={e=> getUserTickets('google@aol.com')}>Get User Tickets</button>
+          <button onClick={e => getUserTickets('google@aol.com')}>Get User Tickets</button>
           <button onClick={e => downloadUserTickets()}>Download UserTickets</button>
           <button onClick={e => fillForm()}>Fill Form</button>
           <form>
             <input type="file" name="file" multiple onChange={e => setFile(e.target.files)} />
-            <input type="submit" onClick={e => sendFile(e)} value="Upload" />
+            <input type="submit" onClick={e => createTicket(e)} value="Upload" />
           </form>
         </header>
       </div>
     );
   }
 
-  function getUserTickets(email){
+ function getUserTickets(email) {
     // e.preventDefault()
-    let emailURI  = encodeURIComponent(email)
+    let emailURI = encodeURIComponent(email)
 
-    fetch(`${API_BASE_URL}/users/tickets/${emailURI}`)
-    .then(response => response.json())
-    .then(data => setUserTickets(data))
-    .catch(err => console.err(err))
-
-
+    return fetch(`${API_BASE_URL}/users/tickets/${emailURI}`)
+      .then(response => response.json())
+      .then(data => setUserTickets(data))
+      .catch(err => console.err(err))
 
   }
 
-  async function downloadUserTickets(){
+  async function downloadUserTickets() {
 
-    for(let i = 0; i < userTickets.length; ++i){
+    for (let i = 0; i < userTickets.length; ++i) {
 
       let fileName = userTickets[i].form_filepath;
       let currTicket = userTickets[i]
 
 
       let formpdfbytes = await fetch(`http://localhost:8080/tickets/${userTickets[i].id}`).then(res => res.arrayBuffer())
-
       let pdfDoc = await PDFDocument.load(formpdfbytes)
       const pdfBytes = await pdfDoc.save()
 
-      download(pdfBytes, `${currTicket.lastname}-${currTicket.firstname} 2875.pdf`, "application/pdf")
-
+        download(pdfBytes, `${userTickets[i].formname}`, "application/pdf")
 
     }
   }
@@ -385,9 +500,12 @@ let fullDate = `${year}${month}${day}`;
   let contextObj = {
 
     fillForm,
-    sendFile,
     getUserTickets,
-    downloadUserTickets
+    downloadUserTickets,
+    navigate,
+    updateTicket,
+    createTicket,
+    userTickets
 
   }
 
@@ -403,8 +521,10 @@ let fullDate = `${year}${month}${day}`;
     <AppContext.Provider value={contextObj}>
       <Routes>
         <Route path='/' element={<PlaceHolderPage />} />
+        <Route path='/homepage' element={<Homepage />} />
         <Route path='/frontpage' element={<Frontpage />} />
         <Route path='/upload' element={<UploadPage />} />
+        <Route path='/tickets' element={<TicketsPage />} />
       </Routes>
     </AppContext.Provider>
 
