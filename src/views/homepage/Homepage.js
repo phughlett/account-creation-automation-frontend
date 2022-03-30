@@ -12,9 +12,9 @@ export default function Homepage() {
     <div className="Homepage">
       <h2>Welcome to the 2875 Ticketmaster</h2>
       <ul>
-        <Link to="/frontpage"><button className="homepage-button">Create Ticket</button></Link>
-        <Link to="/upload"><button className="homepage-button">Upload/Update Forms</button></Link>
-        <Link to="/tickets"><button className="homepage-button">Get User's Forms</button></Link>
+        <Link to="/frontpage"><button className="homepage-button">Create Account</button></Link>
+        <Link to="/upload"><button className="homepage-button">Upload Forms</button></Link>
+        <Link to="/tickets"><button className="homepage-button">Dashboard</button></Link>
       </ul>
     </div>
 

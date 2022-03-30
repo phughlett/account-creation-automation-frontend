@@ -9,10 +9,6 @@
   font-size: calc(4px + 2vmin);
   color: white;
 }
-.Role{
-  
-}
-
 
 .button {
   background-color: #486b99;
@@ -27,11 +23,17 @@
 
 
 .MuiDropzoneArea-root{
-  background-color: #dce5e9;
+  background-color: #FFEBF2;
   color:white;
   height: 22em;
 }
 
 .MuiDropzoneArea-textContainer{
   color:black;
+}
+
+.upload-header{
+background-color:#282c34;
+color: white;
+
 }

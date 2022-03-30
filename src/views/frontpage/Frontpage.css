@@ -13,8 +13,8 @@
   display: flex;
   flex-wrap: wrap;
   padding: .5em;
-  align-items:baseline;
-  text-align: left;
+  align-items: center;
+  text-align: center;
 
 
 
@@ -22,6 +22,10 @@
 
 #SupervisorInfo{
   padding: .5em;
+  width: 98%;
+  text-align: left;
+  align-items: center;
+  display: flex;
 
 }
 
@@ -42,9 +46,19 @@ input{
   margin-right: .25em;
 }
 
+
 label{
 
   margin-left: .25em;
   margin-right: .25em;
 
+}
+
+form{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 65%;
+  padding: .5em;
+  margin: .2em;
 }

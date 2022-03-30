@@ -18,17 +18,28 @@ function App() {
   const [pdfFileBuffer, setPdfFileBuffer] = useState();
   const [file, setFile] = useState();
   const [userTickets, setUserTickets] = useState([]);
+  const [allTickets, setAllTickets] = useState([]);
+  const [activeTickets, setActiveTickets] = useState([]);
+  const [systemInfo, setSystemInfo] = useState([])
+
+
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/tickets`)
+    .then(response => response.json())
+    .then(data => setAllTickets(data))
+    .catch(err => console.log('Error on useEffect getting all tickets: ', err))
+
+    fetch(`${API_BASE_URL}/systems`)
+    .then(response => response.json())
+    .then(data => setSystemInfo(data))
+    .catch(err => console.log('Error on useEffect getting all tickets: ', err))
+  }, [])
 
   //download.js v3.0, by dandavis; 2008-2014. [CCBY2] see http://danml.com/download.html for tests/usage
   // v1 landed a FF+Chrome compat way of downloading strings to local un-named files, upgraded to use a hidden frame and optional mime
   // v2 added named files via a[download], msSaveBlob, IE (10+) support, and window.URL support for larger+faster saves than dataURLs
   // v3 added dataURL and Blob Input, bind-toggle arity, and legacy dataURL fallback was improved with force-download mime and base64 support
-
   // data can be a string, Blob, File, or dataURL
-
-
-
-
   function download(data, strFileName, strMimeType) {
 
     var self = window, // this script is only for browsers anyway...
@@ -157,6 +168,10 @@ function App() {
 
     console.log('Systemname: ', systemName)
     console.log('userInfo', userInfo)
+
+    let systemRoles = systemInfo.filter(system => system.system_name === systemName)
+    systemRoles = systemRoles[0]
+    console.log(systemRoles)
     let fileBytes;
 
 
@@ -259,9 +274,9 @@ function App() {
     textMailAddress.setText('The Pentagon, Washington, DC')
     checkUsCitizen.check()
 
-    if (userInfo.statusMil === 'true') checkMilitary.check();
-    if (userInfo.statusCiv === 'true') checkCivilian.check();
-    if (userInfo.statusKtr === 'true') checkContractor.check()
+    if (userInfo.statusMil) checkMilitary.check();
+    if (userInfo.statusCiv) checkCivilian.check();
+    if (userInfo.statusKtr) checkContractor.check();
 
     checkCyberAwareness.check()
     textTrainingDate.setText(userInfo.trainingDate)
@@ -275,13 +290,14 @@ function App() {
     textSupervisorOrganization.setText(userInfo.supervisorOrg)
     textSupervisorEmail.setText(userInfo.supervisorEmail)
     textSupervisorPhoneNumber.setText(userInfo.supervisorPhone)
-    textIaoDepartment.setText('WK')
-    textIaoPhoneNumber.setText('785-1249')
+    textInformationOwnerPhoneNumber.setText(systemRoles.info_owner_phonenum)
+    textIaoDepartment.setText(systemRoles.iao_name)
+    textIaoPhoneNumber.setText(systemRoles.iao_phonenum)
     // textUserName.setText('Mario A Plumber')
     textInvestigationType.setText('Single Scope')
     textClearanceLevel.setText('Classified')
-    textSecurityManagerName.setText('Leeroy Jenkins')
-    textSecurityManagerPhoneNum.setText('894-8419')
+    textSecurityManagerName.setText(systemRoles.sec_man_name)
+    textSecurityManagerPhoneNum.setText(systemRoles.sec_man_phonenum)
 
 
     pdfDoc.setTitle(`${userInfo.firstName}`)
@@ -336,6 +352,7 @@ function App() {
         let infoOwnerSignature = form.getField('Signature3')
         let iaoSignature = form.getField('Signature4')
         let secManagerSignature = form.getField('Signature5')
+
 
         // console.log()
 
@@ -421,7 +438,7 @@ function App() {
         body.append('supervisor', roleSigned.includes('Supervisor'))
         body.append('iao', roleSigned.includes('IAO'))
         body.append('sec_man', roleSigned.includes('Security Manager'))
-        body.append('sys_admin', roleSigned.includes('System Admin'))
+        body.append('info_owner', roleSigned.includes('Information Owner'))
 
         fetch(`${API_BASE_URL}/tickets/update`, {
           method: 'PATCH',
@@ -505,7 +522,14 @@ function App() {
     navigate,
     updateTicket,
     createTicket,
-    userTickets
+    userTickets,
+    setUserTickets,
+    allTickets,
+    setAllTickets,
+    API_BASE_URL,
+    download,
+    activeTickets,
+    systemInfo
 
   }
 
@@ -520,8 +544,7 @@ function App() {
 
     <AppContext.Provider value={contextObj}>
       <Routes>
-        <Route path='/' element={<PlaceHolderPage />} />
-        <Route path='/homepage' element={<Homepage />} />
+        <Route path='/' element={<Homepage />} />
         <Route path='/frontpage' element={<Frontpage />} />
         <Route path='/upload' element={<UploadPage />} />
         <Route path='/tickets' element={<TicketsPage />} />
