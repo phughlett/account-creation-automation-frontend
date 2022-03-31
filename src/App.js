@@ -11,7 +11,7 @@ import TicketsPage from './views/ticketspage/TicketsPage'
 
 function App() {
 
-  const API_BASE_URL = 'http://localhost:8080'
+  const API_BASE_URL = 'https://account-creation-backend.herokuapp.com'
   const FRONTEND_BASE_URL = 'http://localhost:3000'
   const navigate = useNavigate();
 
@@ -176,7 +176,7 @@ function App() {
 
 
 
-    let formpdfbytes = await fetch('http://localhost:8080/').then(res => res.arrayBuffer())
+    let formpdfbytes = await fetch(`${API_BASE_URL}/tickets/templates/2875`).then(res => res.arrayBuffer())
 
 
     let pdfDoc = await PDFDocument.load(formpdfbytes)
@@ -386,11 +386,10 @@ function App() {
         body.append('formname', formname)
 
 
-        fetch(`${API_BASE_URL}/tickets/create`, {
+        return fetch(`${API_BASE_URL}/tickets/create`, {
           method: 'POST',
           body
         })
-          .then(data => console.log(data))
           .catch(err => console.log('err: ', err))
 
 
@@ -404,7 +403,7 @@ function App() {
 
   async function updateTicket(file, roleSigned) {
 
-    console.log(roleSigned)
+    // console.log(roleSigned)
 
     const reader = new FileReader()
 
@@ -440,11 +439,10 @@ function App() {
         body.append('sec_man', roleSigned.includes('Security Manager'))
         body.append('info_owner', roleSigned.includes('Information Owner'))
 
-        fetch(`${API_BASE_URL}/tickets/update`, {
+        return fetch(`${API_BASE_URL}/tickets/update`, {
           method: 'PATCH',
           body
         })
-          .then(data => console.log(data))
           .catch(err => console.log('err: ', err))
 
 
@@ -505,7 +503,7 @@ function App() {
       let currTicket = userTickets[i]
 
 
-      let formpdfbytes = await fetch(`http://localhost:8080/tickets/${userTickets[i].id}`).then(res => res.arrayBuffer())
+      let formpdfbytes = await fetch(`${API_BASE_URL}/tickets/${userTickets[i].id}`).then(res => res.arrayBuffer())
       let pdfDoc = await PDFDocument.load(formpdfbytes)
       const pdfBytes = await pdfDoc.save()
 

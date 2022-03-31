@@ -38,7 +38,7 @@ export default function UploadPage() {
   };
 
 
-  function onSubmitHandler(e) {
+  async function onSubmitHandler(e) {
     e.preventDefault()
 
     if (roles.includes('User')) {
@@ -52,10 +52,10 @@ export default function UploadPage() {
     } else if (roles.includes('Security Manager', roles)) {
       files.forEach(file => updateTicket(file, roles))
     }
+    setTimeout(function () {
+      return navigate("/tickets");
+    }, 1000);
 
-
-
-    navigate('/tickets')
   }
 
   function changeRole(e) {
